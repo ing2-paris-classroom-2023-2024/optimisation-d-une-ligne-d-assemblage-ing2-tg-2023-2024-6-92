@@ -12,7 +12,14 @@ typedef struct graphe {
     int *tabOperations;
     sommet *listeArc;
     int taille;
+    int degMax;
 } graphe;
+
+
+typedef struct Colorations{
+    int **Couleurs;
+}colorations;
+
 
 graphe *lireFichier(const char *nomFichier) {
     FILE *fichier = fopen(nomFichier, "r");
@@ -107,24 +114,26 @@ graphe *lireFichier(const char *nomFichier) {
     }
 
     fclose(fichier);
-    return g;
-}
-
-
-int *TriParDegreGraphe(graphe *g){
-    int degreMax=0 ;
-
-    int *tabSommets = calloc((g->taille + 1) * sizeof(int),0);
-    for (int m =0;m<=g->taille;m++){
-        tabSommets[m]=0;
-    }
+    int degreMax=0;
     for (int i =1;i<g->taille;i++){
         if(g->listeArc[i].degre> degreMax){
             degreMax=g->listeArc[i].degre;
         }
     }
+    g->degMax=degreMax;
+    return g;
+}
 
-    int finTri=degreMax;
+
+int *TriParDegreGraphe(graphe *g){
+
+
+    int *tabSommets = calloc((g->taille + 1) * sizeof(int),0);
+    for (int m =0;m<=g->taille;m++){
+        tabSommets[m]=0;
+    }
+
+    int finTri=g->degMax;
     int j=0;
     while(finTri>-1) {
         int i=1;
@@ -151,14 +160,37 @@ bool estAdj(graphe *g,int s1,int s2){
     return false;
 }
 
-
+colorations **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantie l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
+    int *tabSommet=TriParDegreGraphe(g);
+    colorations **colo= malloc(sizeof(colorations));
+    int **couleurs=(int **)malloc(g->taille * sizeof(int *));
+    for (int i = 0; i < g->taille; i++) {
+        couleurs[i] = (int *)malloc(g->taille * sizeof(int ));
+    }
+    int *vus=tabSommet;
+    int fin =0;
+    couleurs[fin][0]=tabSommet[0];
+    vus[fin]=0;
+    while(fin<= g->taille){
+        if(vus[fin]!=0){
+            int index=1;
+            for (int i=0;i<=g->taille;i++){
+                for(int j=0;j<g->listeArc[i].degre;i++) {
+                    if ((!estAdj(g, tabSommet[i], g->listeArc[i].adjacents[j]))&&(tabSommet[i]!=g->listeArc[i].adjacents[j])) {
+                        vus[i]=0;
+                        couleurs[fin][index]=fin;
+                    }
+                }
+            }
+        }
+    }
+    return colo;
+}
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-    int *tabSommet=TriParDegreGraphe(g);
-    for (int k =0;k<g->taille;k++){
-        printf("%d,",tabSommet[k]);
-    }
+    colorations **colo = Coloration(g);
+
 
     free(g->tabOperations);
     for (int i = 0; i < g->listeArc->nom; i++) {
