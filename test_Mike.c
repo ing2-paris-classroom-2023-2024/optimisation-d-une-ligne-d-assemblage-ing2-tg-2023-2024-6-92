@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct sommet {
     int nom;
@@ -77,11 +78,11 @@ graphe *lireFichier(const char *nomFichier) {
 
 
     }
-    printf("taille g:%d\n",g->taille);
+
 
 
     for (int i = 1; i <= maxNom; i++) {
-        printf("%d\n",g->listeArc[i].degre);
+
         g->listeArc[i].adjacents = malloc(g->listeArc[i].degre * sizeof(int));
         g->listeArc[i].nom=i;
 
@@ -100,7 +101,7 @@ graphe *lireFichier(const char *nomFichier) {
 
         g->listeArc[sommet2].adjacents[index] = sommet1;
 
-        printf("%d,%d \n",g->listeArc[sommet1].adjacents[index],g->listeArc[sommet2].adjacents[index]);
+
         index+=1;
 
     }
@@ -109,10 +110,55 @@ graphe *lireFichier(const char *nomFichier) {
     return g;
 }
 
+
+int *TriParDegreGraphe(graphe *g){
+    int degreMax=0 ;
+
+    int *tabSommets = calloc((g->taille + 1) * sizeof(int),0);
+    for (int m =0;m<=g->taille;m++){
+        tabSommets[m]=0;
+    }
+    for (int i =1;i<g->taille;i++){
+        if(g->listeArc[i].degre> degreMax){
+            degreMax=g->listeArc[i].degre;
+        }
+    }
+
+    int finTri=degreMax;
+    int j=0;
+    while(finTri>-1) {
+        int i=1;
+        while (i <= 35) {
+            if (g->listeArc[i].degre == finTri) {
+                tabSommets[j] = i;
+                j++;
+
+            }
+            i++;
+        }
+        finTri--;
+
+    }
+    return tabSommets;
+}
+
+bool estAdj(graphe *g,int s1,int s2){
+    for (int i=0;i<g->listeArc[s1].degre;i++){
+        if(g->listeArc[s1].adjacents[i]==s2){
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-
-
+    int *tabSommet=TriParDegreGraphe(g);
+    for (int k =0;k<g->taille;k++){
+        printf("%d,",tabSommet[k]);
+    }
 
     free(g->tabOperations);
     for (int i = 0; i < g->listeArc->nom; i++) {
