@@ -38,8 +38,10 @@ graphe *lireFichier(const char *nomFichier) {
         if (sommet2 > maxDegre) {
             maxDegre = sommet2;
         }
-        printf("%d,%d\n",sommet1,sommet2);
+
     }
+    graphe *g=malloc(sizeof(graphe));
+    g->taille=maxDegre;
 
 
     fclose(fichier);
@@ -51,37 +53,56 @@ graphe *lireFichier(const char *nomFichier) {
     }
 
 
-    graphe *g=malloc(sizeof(graphe));
-    g->tabOperations = malloc((maxDegre + 1) * sizeof(int));
-    g->listeArc = malloc((maxNom + 1) * sizeof(sommet));
 
-
+    g->tabOperations = malloc((maxDegre +1) * sizeof(int));
+    g->listeArc = malloc((maxNom +1) * sizeof(sommet));
 
 
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
-        // Mettre à jour le degré des sommets
-        g->listeArc[sommet1].degre++;
-        g->listeArc[sommet2].degre++;
-        g->taille+=1;
+        g->listeArc[sommet1].degre=0;
+        g->listeArc[sommet2].degre=0;
+    }
+    fclose(fichier);
+    fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
     }
 
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
 
-    for (int i = 0; i <= maxNom; i++) {
+        g->listeArc[sommet1].degre++;
+
+        g->listeArc[sommet2].degre++;
+
+
+    }
+    printf("taille g:%d\n",g->taille);
+
+
+    for (int i = 1; i <= maxNom; i++) {
+        printf("%d\n",g->listeArc[i].degre);
         g->listeArc[i].adjacents = malloc(g->listeArc[i].degre * sizeof(int));
-        g->listeArc[i].degre = 0;
+        g->listeArc[i].nom=i;
+
     }
 
 
     fclose(fichier);
     fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
-        perror("Erreur lors de l'ouverture du fichier");
+        printf("probleme fichier");
         exit(EXIT_FAILURE);
     }
-
+    int index=0 ;
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
-        g->listeArc[sommet1].adjacents[g->listeArc[sommet1].degre++] = sommet2;
-        g->listeArc[sommet2].adjacents[g->listeArc[sommet2].degre++] = sommet1;
+        g->listeArc[sommet1].adjacents[index] = sommet2;
+
+        g->listeArc[sommet2].adjacents[index] = sommet1;
+
+        printf("%d,%d \n",g->listeArc[sommet1].adjacents[index],g->listeArc[sommet2].adjacents[index]);
+        index+=1;
+
     }
 
     fclose(fichier);
@@ -92,9 +113,6 @@ int main() {
     graphe *g = lireFichier("exclusions.txt");
 
 
-    for (int i = 0; i <= g->taille; i++) {
-        printf("%d\n",g->listeArc[i].nom);
-    }
 
     free(g->tabOperations);
     for (int i = 0; i < g->listeArc->nom; i++) {
