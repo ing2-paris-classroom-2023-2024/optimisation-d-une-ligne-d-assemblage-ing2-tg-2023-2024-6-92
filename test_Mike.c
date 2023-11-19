@@ -160,28 +160,40 @@ bool estAdj(graphe *g,int s1,int s2){
     return false;
 }
 
-colorations **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantie l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
+colorations *Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantie l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
     int *tabSommet=TriParDegreGraphe(g);
-    colorations **colo= malloc(sizeof(colorations));
-    int **couleurs=(int **)malloc(g->taille * sizeof(int *));
+    colorations *colo = malloc(sizeof(colorations));
+    int **couleurs = (int **)malloc(g->taille * sizeof(int *));
     for (int i = 0; i < g->taille; i++) {
-        couleurs[i] = (int *)malloc(g->taille * sizeof(int ));
+        couleurs[i] = (int *)calloc(g->taille, sizeof(int));
     }
+// probleme ici, le code s'arrete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int *vus=tabSommet;
     int fin =0;
-    couleurs[fin][0]=tabSommet[0];
-    vus[fin]=0;
+    printf("attention\n");
     while(fin<= g->taille){
         if(vus[fin]!=0){
+            couleurs[fin][0]=tabSommet[fin];
+            vus[fin]=0;
             int index=1;
             for (int i=0;i<=g->taille;i++){
                 for(int j=0;j<g->listeArc[i].degre;i++) {
-                    if ((!estAdj(g, tabSommet[i], g->listeArc[i].adjacents[j]))&&(tabSommet[i]!=g->listeArc[i].adjacents[j])) {
+                    if ((!estAdj(g, tabSommet[i], g->listeArc[tabSommet[i]].adjacents[j]))&&(tabSommet[i]!=g->listeArc[tabSommet[i]].adjacents[j])) {
                         vus[i]=0;
-                        couleurs[fin][index]=fin;
+                        couleurs[fin][index]=tabSommet[i];
+                        index++;
                     }
                 }
             }
+        }
+        fin++;
+
+    }
+    for(int l=0;l<g->taille;l++){
+        printf("\ncouleur %d :",l);
+        for(int m=0;m<g->taille;m++){
+            if(couleurs[l][m]!=0){
+            printf("%d,",couleurs[l][m]);}
         }
     }
     return colo;
@@ -189,7 +201,7 @@ colorations **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Wels
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-    colorations **colo = Coloration(g);
+    colorations *colo = Coloration(g);
 
 
     free(g->tabOperations);
