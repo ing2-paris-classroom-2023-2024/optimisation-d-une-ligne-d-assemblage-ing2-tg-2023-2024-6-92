@@ -18,7 +18,7 @@ typedef struct graphe {
 
 typedef struct Colorations{
     int **Couleurs;
-}colorations;
+}Colorations;
 
 
 graphe *lireFichier(const char *nomFichier) {
@@ -159,15 +159,16 @@ bool estAdj(graphe *g,int s1,int s2){
     }
     return false;
 }
+int **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantit l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
+    int taille = g->taille;
 
-colorations *Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantie l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
-    int *tabSommet=TriParDegreGraphe(g);
-    colorations *colo = malloc(sizeof(colorations));
-    int **couleurs = (int **)malloc(g->taille * sizeof(int *));
-    for (int i = 0; i < g->taille; i++) {
-        couleurs[i] = (int *)calloc(g->taille, sizeof(int));
+    int **couleurs = (int**)malloc(taille * sizeof(int*));
+    for (int i = 0; i < taille; i++) {
+        couleurs[i] = (int*)malloc(taille * sizeof(int));
     }
-// probleme ici, le code s'arrete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    printf("hi:%d",couleurs[0][0]);
+
+    int *tabSommet=TriParDegreGraphe(g);
     int *vus=tabSommet;
     int fin =0;
     printf("attention\n");
@@ -176,32 +177,43 @@ colorations *Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsc
             couleurs[fin][0]=tabSommet[fin];
             vus[fin]=0;
             int index=1;
-            for (int i=0;i<=g->taille;i++){
+            for (int i=0;i<g->taille;i++){
                 for(int j=0;j<g->listeArc[i].degre;i++) {
+                    printf(".");
                     if ((!estAdj(g, tabSommet[i], g->listeArc[tabSommet[i]].adjacents[j]))&&(tabSommet[i]!=g->listeArc[tabSommet[i]].adjacents[j])) {
                         vus[i]=0;
+
                         couleurs[fin][index]=tabSommet[i];
                         index++;
                     }
                 }
+
             }
+
         }
         fin++;
 
     }
-    for(int l=0;l<g->taille;l++){
-        printf("\ncouleur %d :",l);
-        for(int m=0;m<g->taille;m++){
-            if(couleurs[l][m]!=0){
-            printf("%d,",couleurs[l][m]);}
-        }
-    }
-    return colo;
+
+
+
+    return couleurs;
 }
+
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-    colorations *colo = Coloration(g);
+    Colorations *colo = malloc(sizeof(Colorations));
+    colo->Couleurs= Coloration(g);
+    for(int l=0;l<g->taille;l++){
+        printf("\ncouleur %d :",l);
+        for(int m=0;m<g->taille;m++){
+            if(colo->Couleurs[l][m]!=0){
+                printf("%d,",colo->Couleurs[l][m]);}
+        }
+    }
+
+
 
 
     free(g->tabOperations);
