@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct sommet {
     int nom;
@@ -10,12 +11,20 @@ typedef struct sommet {
 typedef struct graphe {
     int *tabOperations;
     sommet *listeArc;
+    int taille;
+    int degMax;
 } graphe;
 
-graphe lireFichier(const char *nomFichier) {
+
+typedef struct Colorations{
+    int **Couleurs;
+}Colorations;
+
+
+graphe *lireFichier(const char *nomFichier) {
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
-        perror("Erreur lors de l'ouverture du fichier");
+        printf("probleme fichier");
         exit(EXIT_FAILURE);
     }
 
@@ -23,7 +32,7 @@ graphe lireFichier(const char *nomFichier) {
     int maxDegre = 0;
     int sommet1, sommet2;
 
-    // Trouver le nombre de sommets et le degré maximum
+
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
         if (sommet1 > maxNom) {
             maxNom = sommet1;
@@ -37,69 +46,181 @@ graphe lireFichier(const char *nomFichier) {
         if (sommet2 > maxDegre) {
             maxDegre = sommet2;
         }
-    }
 
-    // Réinitialiser le curseur de fichier
+    }
+    graphe *g=malloc(sizeof(graphe));
+    g->taille=maxDegre;
+
+
     fclose(fichier);
 
     fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
-        perror("Erreur lors de l'ouverture du fichier");
+        printf("probleme fichier");
         exit(EXIT_FAILURE);
     }
 
-    // Initialiser le graphe
-    graphe g;
-    g.tabOperations = malloc((maxDegre + 1) * sizeof(int));
-    g.listeArc = malloc((maxNom + 1) * sizeof(sommet));
 
-    for (int i = 0; i <= maxNom; i++) {
-        g.listeArc[i].nom = i;
-        g.listeArc[i].degre = 0;
-        g.listeArc[i].adjacents = NULL;
-    }
 
-    // Lire les arêtes et construire la liste d'adjacence
+    g->tabOperations = malloc((maxDegre +1) * sizeof(int));
+    g->listeArc = malloc((maxNom +1) * sizeof(sommet));
+
+
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
-        // Mettre à jour le degré des sommets
-        g.listeArc[sommet1].degre++;
-        g.listeArc[sommet2].degre++;
+        g->listeArc[sommet1].degre=0;
+        g->listeArc[sommet2].degre=0;
     }
-
-    // Allouer de la mémoire pour les listes d'adjacence
-    for (int i = 0; i <= maxNom; i++) {
-        g.listeArc[i].adjacents = malloc(g.listeArc[i].degre * sizeof(int));
-        g.listeArc[i].degre = 0;  // Réinitialiser le degré pour la construction de la liste d'adjacence
-    }
-
-    // Remplir les listes d'adjacence
     fclose(fichier);
     fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
-        perror("Erreur lors de l'ouverture du fichier");
+        printf("probleme fichier");
         exit(EXIT_FAILURE);
     }
 
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
-        g.listeArc[sommet1].adjacents[g.listeArc[sommet1].degre++] = sommet2;
-        g.listeArc[sommet2].adjacents[g.listeArc[sommet2].degre++] = sommet1;
+
+        g->listeArc[sommet1].degre++;
+
+        g->listeArc[sommet2].degre++;
+
+
+    }
+
+
+
+    for (int i = 1; i <= maxNom; i++) {
+
+        g->listeArc[i].adjacents = malloc(g->listeArc[i].degre * sizeof(int));
+        g->listeArc[i].nom=i;
+
+    }
+
+
+    fclose(fichier);
+    fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
+    }
+    int index=0 ;
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
+        g->listeArc[sommet1].adjacents[index] = sommet2;
+
+        g->listeArc[sommet2].adjacents[index] = sommet1;
+
+
+        index+=1;
+
     }
 
     fclose(fichier);
+    int degreMax=0;
+    for (int i =1;i<g->taille;i++){
+        if(g->listeArc[i].degre> degreMax){
+            degreMax=g->listeArc[i].degre;
+        }
+    }
+    g->degMax=degreMax;
     return g;
 }
 
-int main() {
-    graphe g = lireFichier("exclusions.txt");
 
-    // Utilisez les données du graphe comme nécessaire
+int *TriParDegreGraphe(graphe *g){
 
-    // Libérez la mémoire à la fin du programme
-    free(g.tabOperations);
-    for (int i = 0; i < g.listeArc->nom; i++) {
-        free(g.listeArc[i].adjacents);
+
+    int *tabSommets = calloc((g->taille + 1) * sizeof(int),0);
+    for (int m =0;m<=g->taille;m++){
+        tabSommets[m]=0;
     }
-    free(g.listeArc);
+
+    int finTri=g->degMax;
+    int j=0;
+    while(finTri>-1) {
+        int i=1;
+        while (i <= 35) {
+            if (g->listeArc[i].degre == finTri) {
+                tabSommets[j] = i;
+                j++;
+
+            }
+            i++;
+        }
+        finTri--;
+
+    }
+    return tabSommets;
+}
+
+bool estAdj(graphe *g,int s1,int s2){
+    for (int i=0;i<g->listeArc[s1].degre;i++){
+        if(g->listeArc[s1].adjacents[i]==s2){
+            return true;
+        }
+    }
+    return false;
+}
+int **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantit l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
+    int taille = g->taille;
+
+    int **couleurs = (int**)malloc(taille * sizeof(int*));
+    for (int i = 0; i < taille; i++) {
+        couleurs[i] = (int*)malloc(taille * sizeof(int));
+    }
+    printf("hi:%d",couleurs[0][0]);
+
+    int *tabSommet=TriParDegreGraphe(g);
+    int *vus=tabSommet;
+    int fin =0;
+    printf("attention\n");
+    while(fin<= g->taille){
+        if(vus[fin]!=0){
+            couleurs[fin][0]=tabSommet[fin];
+            vus[fin]=0;
+            int index=1;
+            for (int i=0;i<g->taille;i++){
+                for(int j=0;j<g->listeArc[i].degre;i++) {
+                    printf(".");
+                    if ((!estAdj(g, tabSommet[i], g->listeArc[tabSommet[i]].adjacents[j]))&&(tabSommet[i]!=g->listeArc[tabSommet[i]].adjacents[j])) {
+                        vus[i]=0;
+
+                        couleurs[fin][index]=tabSommet[i];
+                        index++;
+                    }
+                }
+
+            }
+
+        }
+        fin++;
+
+    }
+
+
+
+    return couleurs;
+}
+
+
+int main() {
+    graphe *g = lireFichier("exclusions.txt");
+    Colorations *colo = malloc(sizeof(Colorations));
+    colo->Couleurs= Coloration(g);
+    for(int l=0;l<g->taille;l++){
+        printf("\ncouleur %d :",l);
+        for(int m=0;m<g->taille;m++){
+            if(colo->Couleurs[l][m]!=0){
+                printf("%d,",colo->Couleurs[l][m]);}
+        }
+    }
+
+
+
+
+    free(g->tabOperations);
+    for (int i = 0; i < g->listeArc->nom; i++) {
+        free(g->listeArc[i].adjacents);
+    }
+    free(g->listeArc);
 
     return 0;
 }
