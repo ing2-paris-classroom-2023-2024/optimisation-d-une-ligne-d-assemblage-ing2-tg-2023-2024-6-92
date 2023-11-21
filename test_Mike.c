@@ -77,11 +77,15 @@ graphe *lireFichier(const char *nomFichier) {
         exit(EXIT_FAILURE);
     }
 
+    for(int p =0;p<g->taille;p++){
+        g->listeArc[p].degre=0;
+    }
+
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
 
-        g->listeArc[sommet1].degre++;
+        g->listeArc[sommet1].degre+=1;
 
-        g->listeArc[sommet2].degre++;
+        g->listeArc[sommet2].degre+=1;
 
 
     }
@@ -117,23 +121,26 @@ graphe *lireFichier(const char *nomFichier) {
     int degreMax=0;
     for (int i =1;i<g->taille;i++){
         if(g->listeArc[i].degre> degreMax){
+
             degreMax=g->listeArc[i].degre;
         }
     }
     g->degMax=degreMax;
+
     return g;
 }
 
 
 int *TriParDegreGraphe(graphe *g){
 
-
-    int *tabSommets = calloc((g->taille + 1) * sizeof(int),0);
+    int finTri=g->degMax;
+    int *tabSommets = calloc((g->taille ) * sizeof(int),0);
     for (int m =0;m<=g->taille;m++){
         tabSommets[m]=0;
     }
 
-    int finTri=g->degMax;
+
+
     int j=0;
     while(finTri>-1) {
         int i=1;
@@ -148,6 +155,7 @@ int *TriParDegreGraphe(graphe *g){
         finTri--;
 
     }
+
     return tabSommets;
 }
 
@@ -159,52 +167,54 @@ bool estAdj(graphe *g,int s1,int s2){
     }
     return false;
 }
-int **Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantit l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
-    int taille = g->taille;
+Colorations *Coloration(graphe *g){//On décide d'utiliser l'algorithme de Welsch et Powell car il nous garantit l'une des meilleures colorations de graphe même s'il n'est pas  efficace à 100%, aucun algorithme de coloration ne l'est.
+    int *couleur=malloc(g->taille * sizeof(int));
+    Colorations *colo=malloc(sizeof(Colorations));
 
-    int **couleurs = (int**)malloc(taille * sizeof(int*));
-    for (int i = 0; i < taille; i++) {
-        couleurs[i] = (int*)malloc(taille * sizeof(int));
-    }
-    printf("hi:%d",couleurs[0][0]);
+    printf("ok\n");
+    int *tabSommet= TriParDegreGraphe(g);
 
-    int *tabSommet=TriParDegreGraphe(g);
     int *vus=tabSommet;
-    int fin =0;
-    printf("attention\n");
-    while(fin<= g->taille){
+    int fin=0;
+    printf("ok\n");
+
+    printf("ok\n");
+    while(fin<=g->taille){
         if(vus[fin]!=0){
-            couleurs[fin][0]=tabSommet[fin];
+            printf("tour\n");
+            couleur[fin]=tabSommet[fin];
             vus[fin]=0;
             int index=1;
-            for (int i=0;i<g->taille;i++){
-                for(int j=0;j<g->listeArc[i].degre;i++) {
-                    printf(".");
-                    if ((!estAdj(g, tabSommet[i], g->listeArc[tabSommet[i]].adjacents[j]))&&(tabSommet[i]!=g->listeArc[tabSommet[i]].adjacents[j])) {
-                        vus[i]=0;
-
-                        couleurs[fin][index]=tabSommet[i];
+            for(int k=0;k<g->taille;k++){
+                for(int j=0;j<g->listeArc[k].degre;k++){
+                    printf("boucle\n");
+                    if ((!estAdj(g, tabSommet[k], g->listeArc[tabSommet[k]].adjacents[j]))&&(tabSommet[k]!=g->listeArc[tabSommet[k]].adjacents[j])) {
+                        couleur[index]=tabSommet[k];
                         index++;
-                    }
+                }
+
                 }
 
             }
-
         }
+        printf("fin\n");
+        colo->Couleurs[fin]=couleur;
+        printf("ici\n");
         fin++;
+        for (int i = 0;i<g->taille;i++){
+            couleur[i]=0;
+        }
+
 
     }
-
-
-
-    return couleurs;
+    return NULL;
 }
 
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-    Colorations *colo = malloc(sizeof(Colorations));
-    colo->Couleurs= Coloration(g);
+    Colorations *colo;
+    colo=Coloration(g);
     for(int l=0;l<g->taille;l++){
         printf("\ncouleur %d :",l);
         for(int m=0;m<g->taille;m++){
@@ -214,7 +224,11 @@ int main() {
     }
 
 
-
+    for (int i = 0; i < g->taille; i++) {
+        free(colo->Couleurs[i]);
+    }
+    free(colo->Couleurs);
+    free(colo);
 
     free(g->tabOperations);
     for (int i = 0; i < g->listeArc->nom; i++) {
