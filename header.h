@@ -5,6 +5,7 @@ typedef struct {
     int operation;
     float temps;
     int* op_precedent;
+    int nb_operation_precedente;
 }operations_l;
 
 typedef struct
@@ -17,6 +18,7 @@ typedef struct
 int lecture_fichier_operation(operations_l** liste_operation);
 float lecture_temps_cycle(void);
 int nb_ligne_fichier(char* nom_fichier);
+void precedence_init(int nombre_operation,operations_l** liste_operations);
 
 // Ouverture du fichier operation pour lecture des valeurs et inclusions dans une liste operation_l 
 int lecture_fichier_operation(operations_l** liste_operation){
@@ -95,19 +97,38 @@ void precedence_init(int nombre_operation,operations_l** liste_operations){
         actuelle++;
     
 
-    int **operation_precedente_provisoire = malloc(sizeof(int*)*nombre_operation);
+    int **operation_precedente_provisoire = (int**) malloc(sizeof(int*)*nombre_operation);
     for(int i = 0;i<nombre_operation;i++){
-        operation_precedente_provisoire[i] = malloc(sizeof(int)*nb_arc);
+        operation_precedente_provisoire[i] = (int*) malloc(sizeof(int)*nb_arc);
     }
 
     int *nombre_precedence_operation = malloc(sizeof(int)*nombre_operation);
     for(int operation_actuelle = 0;operation_actuelle<nombre_operation;operation_actuelle++){
         for(int arc_actuelle = 0;arc_actuelle<nb_arc;arc_actuelle++){
-            operation_precedente_provisoire[operation_actuelle][arc_actuelle] = liste_precedent[operation_actuelle].op1==operation_actuelle ? liste_precedent[operation_actuelle].op2 : liste_precedent[operation_actuelle].op2 == operation_actuelle ? liste_precedent[operation_actuelle].op1 : -1;
+            operation_precedente_provisoire[operation_actuelle][arc_actuelle] = liste_precedent[operation_actuelle].op1==operation_actuelle ? liste_precedent[operation_actuelle].op2 :  -1;
             if(operation_precedente_provisoire[operation_actuelle][arc_actuelle]!=-1)
                 nombre_precedence_operation[operation_actuelle]++;
         }
     }
+    int nb_operation_finale = 0;
+    for(int operation_actuelle = 0;operation_actuelle<nombre_operation;operation_actuelle++){
+        (*liste_operations)[operation_actuelle].op_precedent = (int*) malloc(sizeof(int)*nombre_precedence_operation[operation_actuelle]);
+        (*liste_operations)[operation_actuelle].nb_operation_precedente = nombre_precedence_operation[operation_actuelle];
+        for(int arc_actuelle = 0;arc_actuelle<nb_arc;arc_actuelle++){
+            if(operation_precedente_provisoire[operation_actuelle][arc_actuelle]!=-1)
+                (*liste_operations)[operation_actuelle].op_precedent[nb_operation_finale] = operation_precedente_provisoire[operation_actuelle][arc_actuelle];
+        }
+    }
+
+
     
 
+
+    fclose(fichier_prece);
+    free(liste_precedent);
+    for(int i = 0;i<nombre_operation;i++){
+        free(operation_precedente_provisoire[i]);
+    }
+    free(operation_precedente_provisoire);
+    free(nombre_precedence_operation);
 }
