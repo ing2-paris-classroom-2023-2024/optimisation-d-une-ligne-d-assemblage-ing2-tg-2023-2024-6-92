@@ -14,6 +14,6 @@ int main(void){
         printf("Operation : %i, temps : %0.2f\n",liste_operation[i].operation,liste_operation[i].temps);
     printf("Il y a %i operation.\n",nb_operation);
 
-    printf("Il y a %0.2f temps_cycle.\n",temps_cycle);
+    printf("Il y a %0.2f temps cycle.\n",temps_cycle);
     return 0;
 }
