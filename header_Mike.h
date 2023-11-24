@@ -138,7 +138,7 @@ int *TriParDegreGraphe(graphe *g) {
             printf("%d,",g->listeArc[tabSommets[k]].adjacents[m]);
         }
     }
-
+    printf("\n");
     return tabSommets;
 }
 
@@ -151,93 +151,49 @@ bool estAdj(graphe *g, int s1, int s2) {
     return false;
 }
 
-Colorations *Coloration(graphe *g) {
-    int couleur[35];
-    Colorations *colo = (Colorations*)malloc(sizeof(Colorations));
-
-
-    printf("ok\n");
-    int *tabSommet = TriParDegreGraphe(g);
-
-    int *vus = tabSommet;
-    int fin = 0;
-    printf("ok\n");
-
-    printf("ok\n");
-    while (fin <= g->taille) {
-        if (vus[fin] != 0) {
-            printf("tour\n");
-
-            for (int i = 0; i < g->taille; i++) {
-                couleur[i] = 0;
+bool estAdjTab(graphe *g, int *tab, int sommet, size_t index) {
+    for (int i = 0; i < g->listeArc[sommet].degre; i++) {
+        for (size_t j = 0; j < index; j++) {
+            if (g->listeArc[sommet].adjacents[i] == tab[j]) {
+                return true;
             }
-            couleur[0] = tabSommet[fin];
-
-            vus[fin] = 0;
-            int index = 1;
-            for (int k = 0; k < g->taille; k++) {
-                printf("elem\n");
-                for (int j = 0; j < g->listeArc[tabSommet[k]].degre; j++) {
-                    printf("boucle\n");
-                    if ((!estAdj(g, tabSommet[k], g->listeArc[tabSommet[k]].adjacents[j]))&&(tabSommet[k] != g->listeArc[tabSommet[k]].adjacents[j])) {
-                        printf("dansIF\n");
-                        couleur[index] = tabSommet[k];
-
-                        index++;
-                    }
-                }
-            }
-        }
-        printf("fin\n");
-        for(int k=0;k<g->taille;k++){
-            colo->Couleurs[fin][k]=couleur[k];
-        }
-        printf("ici\n");
-        fin++;
-        for (int i = 0; i < g->taille; i++) {
-            couleur[i] = 0;
         }
     }
-    return colo;
+    return false;
 }
-
 
 void welshPowell(graphe *g, Colorations *colorations) {
-
     int *tabSommets = TriParDegreGraphe(g);
-    printf("ok\n");
+    int *vus=tabSommets;
     for (int i = 0; i < g->taille; i++) {
-        colorations->Couleurs[i][0] = 0;
-    }
-    printf("init\n");
-    int couleurActuelle = 1;
-    printf("pb:%d\n",g->listeArc[15].adjacents[0]);
-    for (int i = 0; i < g->taille; i++) {
-
-        int sommet = tabSommets[i];
-        printf("sommet etudie:%d\n",sommet);
-        for (int j = 0; j < g->listeArc[sommet].degre; j++) {
-            printf("%d\n",g->listeArc[sommet].adjacents[j]);
-                if (colorations->Couleurs[g->listeArc[sommet].adjacents[j]][0] == couleurActuelle) {
-                    couleurActuelle++;
-                    printf("meme couleur\n");
-                    continue;
+        colorations->Couleurs[i] = malloc(g->taille*sizeof(int));
+        if(vus[i]!=0){
+            colorations->Couleurs[i][0] = tabSommets[i];
+            printf("\nsommet %d: ",colorations->Couleurs[i][0]);
+            vus[i]=0;
+            int index=1;
+            for(int k=0;k<g->taille;k++){
+                if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,colorations->Couleurs[i],tabSommets[k],index)){
+                    colorations->Couleurs[i][index]=tabSommets[k];
+                    printf(" %d,",colorations->Couleurs[i][index]);
+                    vus[k]=0;
+                    index+=1;
                 }
 
-            printf("c:%d\n",j);
+            }
         }
 
-        colorations->Couleurs[sommet][0] = couleurActuelle;
-        if (couleurActuelle > colorations->Couleurs[0][0]) {
-            colorations->Couleurs[0][0] = couleurActuelle;
-        }
 
-        couleurActuelle = 1;
+
+
+
     }
-    printf("fin\n");
+
 
     free(tabSommets);
+    free(vus);
 }
+
 
 
 

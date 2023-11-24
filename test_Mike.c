@@ -4,7 +4,8 @@
 #include "header_Mike.h"
 graphe *lireFichier(const char *nomFichier);
 int *TriParDegreGraphe(graphe *g);
-Colorations *Coloration(graphe *g);
+bool estAdj(graphe *g,int s1,int s2);
+bool estAdjTab(graphe *g, int *tab, int sommet, size_t index);
 void welshPowell(graphe *g, Colorations *colorations);
 
 
@@ -16,16 +17,20 @@ int main() {
         colorations->Couleurs[b]=malloc(sizeof(int)*g->taille);
     }
     welshPowell(g,colorations);
-    printf("Nombre total de couleurs utilisées : %d\n", colorations->Couleurs[0][0]);
+    printf("Tableau de Colorations :\n");
 
-    for (int i = 1; i <= colorations->Couleurs[0][0]; i++) {
-        printf("Couleur %d : ", i);
-        for (int j = 1; j < g->taille; j++) {
-            if (colorations->Couleurs[j][0] == i) {
-                printf("%d ", j);
+    for (size_t i = 0; i < g->taille; i++) {
+        printf("Couleur %zu : [", i + 1);
+
+        for (int j = 0; j < g->taille; j++) {
+            if(colorations->Couleurs[i][j]!=0){
+                printf("%d,", colorations->Couleurs[i][j]);
             }
+
+
         }
-        printf("\n");
+
+        printf("]\n");
     }
 
     for (int i = 0; i < g->taille; i++) {
