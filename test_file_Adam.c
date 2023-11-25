@@ -15,7 +15,7 @@ int main(void){
     
     for(int i = 0;i<nb_operation;i++){
         for(int j = 0;j<liste_operation[i].nb_operation_precedente;j++){
-            printf("%i doit se passer avant la tache %i",liste_operation[i].op_precedent[j],liste_operation[i].operation);
+            printf("%i doit se passer avant la tache %i\n",liste_operation[i].op_precedent[j],liste_operation[i].operation);
         }
     }
         
@@ -24,3 +24,9 @@ int main(void){
     printf("Il y a %0.2f temps cycle.\n",temps_cycle);
     return 0;
 }
+
+
+
+
+
+void 
