@@ -5,24 +5,25 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef struct sommet {
+typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degré
     int nom;
     int *adjacents;
     int degre;
 } sommet;
 
-typedef struct graphe {
+typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre décroissant des degrés, tous les sommets, la taille et le degré maximum
     int *tabOperations;
     sommet *listeArc;
     int taille;
     int degMax;
 } graphe;
 
-typedef struct Colorations {
+typedef struct Colorations {//structure qui contient un tableau des couleurs dans lesquelles on a les sommets
     int **Couleurs;
 } Colorations;
 
-graphe *lireFichier(const char *nomFichier) {
+graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fichier de contrainte d'exclusions
+    //suite à des problèmes d'allocations dynamique nous avons décidé de lire plusieurs fois le fichier
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
         printf("probleme fichier");
@@ -33,7 +34,7 @@ graphe *lireFichier(const char *nomFichier) {
     int maxDegre = 0;
     int sommet1, sommet2;
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//première lecture pour avoir le degré max
         if (sommet1 > maxNom) {
             maxNom = sommet1;
         }
@@ -61,7 +62,7 @@ graphe *lireFichier(const char *nomFichier) {
     g->tabOperations = malloc((maxDegre + 1) * sizeof(int));
     g->listeArc = malloc((maxNom + 1) * sizeof(sommet));
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degré des sommets à 0
         g->listeArc[sommet1].degre = 0;
         g->listeArc[sommet2].degre = 0;
     }
@@ -76,7 +77,7 @@ graphe *lireFichier(const char *nomFichier) {
         g->listeArc[p].degre = 0;
     }
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degrés
         g->listeArc[sommet1].degre += 1;
         g->listeArc[sommet2].degre += 1;
     }
@@ -93,13 +94,13 @@ graphe *lireFichier(const char *nomFichier) {
         exit(EXIT_FAILURE);
     }
     int *index=calloc(g->taille,sizeof(int));
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//attribution des adjacences des sommets
         g->listeArc[sommet1].adjacents[index[sommet1]] = sommet2;
         g->listeArc[sommet2].adjacents[index[sommet2]] = sommet1;
         index[sommet1] += 1;
         index[sommet2] += 1;
     }
-    printf("pb:%d\n",g->listeArc[15].adjacents[1]);
+
 
     fclose(fichier);
     int degreMax = 0;
@@ -132,13 +133,7 @@ int *TriParDegreGraphe(graphe *g) {
         }
         finTri--;
     }
-    for(int k=0;k<g->taille;k++){
-        printf("\nsommet :%d => ",tabSommets[k]);
-        for(int m=0;m<g->listeArc[tabSommets[k]].degre;m++){
-            printf("%d,",g->listeArc[tabSommets[k]].adjacents[m]);
-        }
-    }
-    printf("\n");
+
     return tabSommets;
 }
 
@@ -162,35 +157,28 @@ bool estAdjTab(graphe *g, int *tab, int sommet, size_t index) {
     return false;
 }
 
-void welshPowell(graphe *g, Colorations *colorations) {
+void welshPowell(graphe *g, Colorations *colorations) {//Algorithme de Welsch et Powell comme étudié en cours
     int *tabSommets = TriParDegreGraphe(g);
     int *vus=tabSommets;
     for (int i = 0; i < g->taille; i++) {
         colorations->Couleurs[i] = malloc(g->taille*sizeof(int));
         if(vus[i]!=0){
             colorations->Couleurs[i][0] = tabSommets[i];
-            printf("\nsommet %d: ",colorations->Couleurs[i][0]);
+            printf("\n");
             vus[i]=0;
             int index=1;
             for(int k=0;k<g->taille;k++){
                 if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,colorations->Couleurs[i],tabSommets[k],index)){
                     colorations->Couleurs[i][index]=tabSommets[k];
-                    printf(" %d,",colorations->Couleurs[i][index]);
+                    printf(" ");
                     vus[k]=0;
                     index+=1;
                 }
 
             }
         }
-
-
-
-
-
     }
-
-
-    free(tabSommets);
+    free(tabSommets);//libération de la mémoire
     free(vus);
 }
 
