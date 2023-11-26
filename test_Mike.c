@@ -8,6 +8,14 @@ bool estAdj(graphe *g,int s1,int s2);
 bool estAdjTab(graphe *g, int *tab, int sommet, size_t index);
 void welshPowell(graphe *g, Colorations *colorations);
 
+bool ErreurAllocation(Colorations *colo,graphe *g){
+    for(int i=0;i<g->taille;i++){
+        if(colo->Couleurs[i][0]>(g->taille+1)){
+            return false;
+        }
+    }
+    return true;
+}
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
@@ -17,6 +25,9 @@ int main() {
         colorations->Couleurs[b]=malloc(sizeof(int)*g->taille);
     }
     welshPowell(g,colorations);
+    while(ErreurAllocation(colorations,g)){
+        welshPowell(g,colorations);
+    }
     printf("Tableau de Colorations :\n");
     int index=1;
     for (size_t i = 0; i < g->taille; i++) {
@@ -29,8 +40,6 @@ int main() {
                 if(colorations->Couleurs[i][j]!=0&&colorations->Couleurs[i][j]<=g->taille){
                     printf("%d,", colorations->Couleurs[i][j]);
                 }
-
-
             }
 
             printf("]\n");}
