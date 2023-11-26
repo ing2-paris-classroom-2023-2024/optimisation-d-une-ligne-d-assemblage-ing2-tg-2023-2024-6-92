@@ -26,6 +26,3 @@ int main(void){
 }
 
 
-
-
-
