@@ -11,7 +11,7 @@ int main(void){
     
     precedence_init(nb_operation,&liste_operation);
     for(int i = 0;i<nb_operation;i++)
-        printf("Operation : %i, temps : %0.2f\n",liste_operation[i].operation,liste_operation[i].temps); //afficher temps
+        printf("Operation : %i, temps : %0.2f\n",liste_operation[i].operation,liste_operation[i].temps); //afficher tempss
     
     for(int i = 0;i<nb_operation;i++){
         for(int j = 0;j<liste_operation[i].nb_operation_precedente;j++){
