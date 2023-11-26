@@ -197,7 +197,7 @@ void update_operations_possible(int index_operation_facile,int **operation_possi
         for(int operation_j=0;operation_j<(*liste_operation)[operation_i].nb_operation_precedente;operation_j++){
             possible = 1;
             for(int operation_effectue = 0; operation_effectue < sizeof(operation_effectuer)/sizeof(int);operation_effectue++){            // ca ne fonctionne pas mais c'est un debut 
-                if((*liste_operation)[operation_i].operation_precedente[operation_j] != operation_effectuer[operation_effectue]){
+                if((*liste_operation)[operation_i].op_precedent[operation_j] != operation_effectuer[operation_effectue]){
                     possible=1;
                 }
             }
