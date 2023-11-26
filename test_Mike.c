@@ -17,6 +17,7 @@ bool ErreurAllocation(Colorations *colo,graphe *g){
     return true;
 }
 
+
 int main() {
     graphe *g = lireFichier("exclusions.txt");
     Colorations *colorations= malloc(sizeof(Colorations));
