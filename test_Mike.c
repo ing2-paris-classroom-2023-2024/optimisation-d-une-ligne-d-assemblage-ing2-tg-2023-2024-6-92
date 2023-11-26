@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+//Definition des structures
+
 typedef struct sommet {
     int nom;
     int *adjacents;
@@ -19,6 +21,7 @@ typedef struct Colorations {
     int **Couleurs;
 } Colorations;
 
+//Fonction qui lit le fichier
 graphe *lireFichier(const char *nomFichier) {
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
@@ -108,6 +111,7 @@ graphe *lireFichier(const char *nomFichier) {
     return g;
 }
 
+//Fonction qui trie dans l'ordre décroissant de degré
 int *TriParDegreGraphe(graphe *g) {
     int finTri = g->degMax;
     int *tabSommets = calloc((g->taille) * sizeof(int), 0);
@@ -131,6 +135,7 @@ int *TriParDegreGraphe(graphe *g) {
     return tabSommets;
 }
 
+//Fonction qui détermine si un sommet est adjacent avec un autre
 bool estAdj(graphe *g, int s1, int s2) {
     for (int i = 0; i < g->listeArc[s1].degre; i++) {
         if (g->listeArc[s1].adjacents[i] == s2) {
@@ -140,6 +145,7 @@ bool estAdj(graphe *g, int s1, int s2) {
     return false;
 }
 
+//Fonction coloration, qui va traiter les contraintes d'exclusion
 Colorations *Coloration(graphe *g) {
     int couleur[g->taille];
     Colorations *colo = malloc(sizeof(Colorations));
@@ -190,6 +196,7 @@ Colorations *Coloration(graphe *g) {
     return colo;
 }
 
+//Fonction principale
 int main() {
     graphe *g = lireFichier("exclusions.txt");
     Colorations *colo;
