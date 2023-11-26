@@ -43,12 +43,27 @@ void tri_ordre_operation(tuple** operations_trie, operations_l** liste_operation
 
 void update_operations_possible(int index_operation_facile,int **operation_possible, int nombre_operation, int * operation_effectuer, int * opeartions_facile, operations_l **liste_operation,float temps_cycle){  //cette fonction va nous permettre de mettre a jour notre liste contenant les operations effectuables à un instant T
     int nombre_operation_possible = 0;
+    int possible = 1;
     for(int i = 0;i<index_operation_facile;i++){
         (*operation_possible)[i] = opeartions_facile[i];
         nombre_operation_possible++;
     }
     if(calcul_operations_temps(*operation_possible,liste_operation,nombre_operation,nombre_operation_possible,temps_cycle)==1)
         return;
+    for(int operation_i = 0;operation_i<nombre_operation;operation_i++){
+        for(int operation_j=0;operation_j<(*liste_operation)[operation_i].nb_operation_precedente;operation_j++){
+            possible = 1;
+            for(int operation_effectue = 0; operation_effectue < sizeof(operation_effectuer)/sizeof(int);operation_effectue++){            // ca ne fonctionne pas mais c'est un debut 
+                if((*liste_operation)[operation_i].operation_precedente[operation_j] != operation_effectuer[operation_effectue]){
+                    possible=1;
+                }
+            }
+            if(possible==1){
+                (*operation_possible)[nombre_operation_possible] = (*liste_operation)[operation_i].operation;
+                nombre_operation_possible++;
+            }
+        }
+    }
     return;
 }
 
