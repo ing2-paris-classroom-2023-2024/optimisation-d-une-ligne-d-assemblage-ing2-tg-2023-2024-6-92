@@ -147,7 +147,7 @@ void precedence_init(int nombre_operation,operations_l** liste_operations){
 
 
 void pert_algo(int nombre_operations, operations_l **liste_operations,float temps_cycle){ // ici on va essayer d'implementer la methode de Pert qui ressemble beaucoup à notre cas d'usage
-    int** liste_operations_effectuer = (int*) malloc(sizeof(int)*nombre_operations);     //liste des operations qui ont deja ete effectue par cycle, quand i = 0 alors c'est le premier cycle toutes les operations effectue
+    int** liste_operations_effectuer = (int**) malloc(sizeof(int*)*nombre_operations);     //liste des operations qui ont deja ete effectue par cycle, quand i = 0 alors c'est le premier cycle toutes les operations effectue
     for(int i = 0;i<nombre_operations;i++){
         liste_operations_effectuer[i] = (int*) malloc(sizeof(int)*nombre_operations);
     }
@@ -192,8 +192,8 @@ void update_operations_possible(int index_operation_facile,int **operation_possi
         (*operation_possible)[i] = opeartions_facile[i];
         nombre_operation_possible++;
     }
-    if(calcul_operations_temps(*operation_possible,liste_operation,nombre_operation,nombre_operation_possible,temps_cycle)==1)
-        return;
+    //if(calcul_operations_temps(*operation_possible,liste_operation,nombre_operation,nombre_operation_possible,temps_cycle)==1)
+    //    return;
     for(int operation_i = 0;operation_i<nombre_operation;operation_i++){
         for(int operation_j=0;operation_j<(*liste_operation)[operation_i].nb_operation_precedente;operation_j++){
             possible = 1;
@@ -211,19 +211,38 @@ void update_operations_possible(int index_operation_facile,int **operation_possi
     return;
 }
 
-int calcul_operations_temps(int* liste,operations_l** liste_operations,int nb_operations, int nombre_operations_possible,float temps_cyle){
-    float time = 0;
-    for(int i = 0;i<nombre_operations_possible;i++){
-        for(int j = 0;j<nb_operations;j++){
-            if(j = liste[i])
-                time+= (float) (*liste_operations)[j].temps;
-        }
+
+
+
+
+float calcul_chemin_rapide(operations_l*** operation_effectuable){
+    int nb_operation_effectuable = (int) (sizeof(*operation_effectuable)/sizeof(operations_l*));
+    int* chemins_possible = (int*) malloc(sizeof(int)*nb_operation_effectuable);
+    int chemin_actuel;
+    for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
+
+        chemin_actuel = calcul_chemin_rapide(&(*operation_effectuable));
+        if(chemin_actuel+((*operation_effectuable)[operation_i])->temps<=10)
+            chemins_possible[operation_i] = ((*operation_effectuable)[operation_i])->temps + chemin_actuel;
+        else
+            chemins_possible[operation_i] = chemin_actuel;
     }
-    if(time> temps_cyle)
-        return 1;
-    return 0;
+    int plus_rapide = 0;
+    for(int chemins = 0; chemins < nb_operation_effectuable; chemins++){
+        if(chemins_possible[chemins]>plus_rapide)
+            plus_rapide = chemins_possible[chemins];
+    }
+    return plus_rapide;
 }
 
 
-
-void calcul_chemin_rapide(operations_l** liste_operations, operations_l** operation_effectuable)
+/*
+void nouvelle_liste_tache(operations_l**** operation_effectuable,int nb_operation_effectuable){
+    operations_l *** nouvelle_liste = (operations_l***) malloc(sizeof(operations_l*)*(nb_operation_effectuable-1));
+    for(int i = 1;i<nb_operation_effectuable;i++){
+        (*nouvelle_liste)[i] = (**operation_effectuable)[i]; 
+    }
+    free(operation_effectuable);
+    operation_effectuable = (&nouvelle_liste);
+}
+*/
