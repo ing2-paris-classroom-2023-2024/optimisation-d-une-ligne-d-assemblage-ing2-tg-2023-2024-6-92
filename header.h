@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define True 1
+#define False 0
+
+
 typedef struct {
     int operation;
     float temps;
     int* op_precedent;
     int nb_operation_precedente;
+    int effectuer;
 }operations_l;
 
 typedef struct
@@ -48,9 +53,9 @@ int lecture_fichier_operation(operations_l** liste_operation){
         operation_actuelle++;
         (*liste_operation)[operation_actuelle-1].operation = operation_acutelle;
         (*liste_operation)[operation_actuelle-1].temps = temps_actuelle;
+        (*liste_operation)[operation_actuelle-1].effectuer = False;
         operation_acutelle = 0;
         temps_actuelle = 0;
-
     }
 
     fclose(fichier_ope);
@@ -154,11 +159,7 @@ void pert_algo(int nombre_operations, operations_l **liste_operations,float temp
     for(int operation_actuelle=0;operation_actuelle<nombre_operations;operation_actuelle++){
         if((*liste_operations)[operation_actuelle].nb_operation_precedente==0)
             operations_facile[operations_facile_index++] = (*liste_operations)[operation_actuelle].operation;
-
     }
-
-
-
 }
 
 void tri_ordre_operation(tuple** operations_trie, operations_l** liste_operations,int nombre_operations){
@@ -224,3 +225,5 @@ int calcul_operations_temps(int* liste,operations_l** liste_operations,int nb_op
 }
 
 
+
+void calcul_chemin_rapide(operations_l** liste_operations, operations_l** operation_effectuable)
