@@ -215,24 +215,81 @@ void update_operations_possible(int index_operation_facile,int **operation_possi
 
 
 
-float calcul_chemin_rapide(operations_l*** operation_effectuable){
-    int nb_operation_effectuable = (int) (sizeof(*operation_effectuable)/sizeof(operations_l*));
-    int* chemins_possible = (int*) malloc(sizeof(int)*nb_operation_effectuable);
-    int chemin_actuel;
+float calcul_chemin_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable){
+    //int nb_operation_effectuable = (int) (sizeof(*operation_effectuable)/sizeof(operations_l*));
+    if(nb_operation_effectuable==1)
+        return (*operation_effectuable)[0]->temps;
+    float* chemins_possible = (float*) malloc(sizeof(int)*nb_operation_effectuable);
+    float chemin_actuel;
+    
     for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
-
-        chemin_actuel = calcul_chemin_rapide(&(*operation_effectuable));
+        int index = 0;
+        operations_l** nouvelles_liste = (operations_l**) malloc(sizeof(operations_l*)*(nb_operation_effectuable-1));
+        for(int operation_j = 0;operation_j<nb_operation_effectuable;operation_j++){
+            if(operation_j!=operation_i){
+                nouvelles_liste[index] = (*operation_effectuable)[operation_j];
+                index++;
+            }
+        }
+        chemin_actuel = calcul_chemin_rapide(&nouvelles_liste,nb_operation_effectuable-1);
         if(chemin_actuel+((*operation_effectuable)[operation_i])->temps<=10)
             chemins_possible[operation_i] = ((*operation_effectuable)[operation_i])->temps + chemin_actuel;
         else
             chemins_possible[operation_i] = chemin_actuel;
+        free(nouvelles_liste);
     }
-    int plus_rapide = 0;
+    float plus_rapide = 0;
     for(int chemins = 0; chemins < nb_operation_effectuable; chemins++){
         if(chemins_possible[chemins]>plus_rapide)
             plus_rapide = chemins_possible[chemins];
     }
+    free(chemins_possible);
     return plus_rapide;
+}
+
+
+float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel){
+    float valeur_final =0;
+    float plus_grand = 0;
+    int index_plus_grand =-1;
+    for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
+        if((*operation_effectuable)[operation_i]->temps > plus_grand && (*operation_effectuable)[operation_i]->temps + temps_actuel <= 10){
+            plus_grand = (*operation_effectuable)[operation_i]->temps;
+            index_plus_grand = operation_i;
+        }
+    }
+    if(index_plus_grand == -1)
+        return 0;
+    int index = 0;
+    operations_l** nouvelles_liste = (operations_l**) malloc(sizeof(operations_l*)*(nb_operation_effectuable-1));
+    for(int operation_j = 0;operation_j<nb_operation_effectuable;operation_j++){
+        if(operation_j!=index_plus_grand){
+            nouvelles_liste[index] = (*operation_effectuable)[operation_j];
+            index++;
+        }
+    }
+    (*operation_effectuable)[index_plus_grand]->effectuer = True;
+    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,nb_operation_effectuable-1,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps);
+
+    return valeur_final;
+}
+
+
+
+
+void implementation_Pert(operations_l** liste_operation);
+
+
+
+
+
+int comptage_operation(operations_l** liste_operation,int nb_operation){
+    int nb_operation_restante= 0;
+    for(int operation_i = 0;operation_i<nb_operation;operation_i++){
+        if((*liste_operation)[operation_i].effectuer==False)
+            nb_operation_restante++;
+    }
+    return nb_operation_restante;
 }
 
 
