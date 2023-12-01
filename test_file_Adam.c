@@ -8,16 +8,12 @@ int main(void){
     
 
     int nb_operation = lecture_fichier_operation(&liste_operation);
-    operations_l ** liste_operations = malloc(sizeof(operations_l*)*nb_operation);
-
-    for(int i = 0;i<nb_operation;i++){
-        liste_operations[i] = &liste_operation[i];
-    }
 
     //float chemin_plus_rapide = calcul_chemin_rapide(&liste_operations, 10);
-    float autre_chemin = calcul_chemin_possible_rapide(&liste_operations,nb_operation,0);
+    //float autre_chemin = calcul_chemin_possible_rapide(&liste_operations,nb_operation,0);
     //printf("Chemin plus rapide %f \n",chemin_plus_rapide);
-    printf("Chemin plus rapide %f \n",autre_chemin);
+    //printf("Chemin plus rapide %f \n",autre_chemin);
+    implementation_Pert(&liste_operation,nb_operation);
     
     /*
     precedence_init(nb_operation,&liste_operation);
