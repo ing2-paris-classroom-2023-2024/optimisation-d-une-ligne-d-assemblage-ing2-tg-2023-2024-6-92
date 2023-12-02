@@ -13,10 +13,11 @@ int main(void){
     //float autre_chemin = calcul_chemin_possible_rapide(&liste_operations,nb_operation,0);
     //printf("Chemin plus rapide %f \n",chemin_plus_rapide);
     //printf("Chemin plus rapide %f \n",autre_chemin);
+    precedence_init(nb_operation,&liste_operation);
     implementation_Pert(&liste_operation,nb_operation);
     
     /*
-    precedence_init(nb_operation,&liste_operation);
+    
     for(int i = 0;i<nb_operation;i++)
         printf("Operation : %i, temps : %0.2f\n",liste_operation[i].operation,liste_operation[i].temps);
     

@@ -191,9 +191,11 @@ float calcul_chemin_rapide(operations_l*** operation_effectuable, int nb_operati
 
 
 float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel){
-    float valeur_final =0;
+    float valeur_final = 0;
     float plus_grand = 0;
     int index_plus_grand =-1;
+    if(nb_operation_effectuable ==0)
+        return 0;
     for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
         if((*operation_effectuable)[operation_i]->temps > plus_grand && (*operation_effectuable)[operation_i]->temps + temps_actuel <= 10){
             plus_grand = (*operation_effectuable)[operation_i]->temps;
@@ -211,7 +213,7 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
         }
     }
     (*operation_effectuable)[index_plus_grand]->effectuer = True;
-    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,nb_operation_effectuable-1,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps);
+    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,index,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps);
 
     return valeur_final;
 }
@@ -225,18 +227,20 @@ void implementation_Pert(operations_l** liste_operation, int nombre_operation){
     while(nb_operation_restante!=0){
         nb_operation_possible = check_operation_possible(liste_operation,nombre_operation) ;
         operations_l **liste_operation_possible = (operations_l**) malloc(sizeof(operations_l*)*nb_operation_possible);
-        associe_liste_operation_possible(liste_operation,&liste_operation_possible,nombre_operation);
+        associe_liste_operation_possible(liste_operation,&liste_operation_possible,nombre_operation);      
         calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0);
         nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
         free(liste_operation_possible);
     }
-    printf("OUI");
 }
 
 void associe_liste_operation_possible(operations_l** liste_operation,operations_l *** liste_operation_possible,int nb_operation){
+    int index = 0;
     for(int operation_i=0;operation_i<nb_operation;operation_i++){
         if((*liste_operation)[operation_i].effectuable == True && (*liste_operation)[operation_i].effectuer == False){
-            (*liste_operation_possible)[operation_i] = &(*liste_operation)[operation_i];
+            (*liste_operation_possible)[index] = &((*liste_operation)[operation_i]);
+            index++;
+            
         }
     }
 }
@@ -249,7 +253,7 @@ int check_operation_possible(operations_l ** liste_operation,int nb_operation){ 
     int nb_operation_effectuable= 0;
     for(int operation_i = 0;operation_i<nb_operation;operation_i++){
         actuelle_etat = False;
-        if((*liste_operation)[operation_i].effectuer==False && (*liste_operation)[operation_i].effectuable==False){
+        if((*liste_operation)[operation_i].effectuer==False){
             actuelle_etat = True;
             for(int op_precedente_i = 0;op_precedente_i<(*liste_operation)[operation_i].nb_operation_precedente;op_precedente_i++){
                 for(int operation_j = 0;operation_j<nb_operation;operation_j++){
@@ -263,6 +267,7 @@ int check_operation_possible(operations_l ** liste_operation,int nb_operation){ 
                 (*liste_operation)[operation_i].effectuable = True;
                 nb_operation_effectuable++;
             }
+
         }
     }
     return nb_operation_effectuable;
@@ -275,6 +280,7 @@ int comptage_operation(operations_l** liste_operation,int nb_operation){    // C
             nb_operation_restante++;
         //printf("Etat : %i",(*liste_operation)[operation_i].effectuer);
     }
+
     return nb_operation_restante;
 }
 
