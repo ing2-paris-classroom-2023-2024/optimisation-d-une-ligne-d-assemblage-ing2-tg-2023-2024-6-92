@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define True 1
 #define False 0
@@ -38,6 +39,21 @@ typedef struct
 
 
 
+typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degré
+    int nom;
+    int *adjacents;
+    int degre;
+    int couleur;
+} sommetExclu;
+
+typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre décroissant des degrés, tous les sommets, la taille et le degré maximum
+    int *tabOperations;
+    sommetExclu *listeArc;
+    int taille;
+    int degMax;
+    int nbStations;
+} graphe;
+
 
 int lecture_fichier_operation(operations_l** liste_operation);
 float lecture_temps_cycle(void);
@@ -46,8 +62,16 @@ void precedence_init(int nombre_operation,operations_l** liste_operations);
 
 int check_operation_possible(operations_l ** liste_operation,int nb_operation);
 int comptage_operation(operations_l** liste_operation,int nb_operation);
-void implementation_Pert(operations_l** liste_operation, int nombre_operation);
+void implementation_Pert(operations_l** liste_operation, int nombre_operation, int temps_cycle);
 void associe_liste_operation_possible(operations_l** liste_operation,operations_l *** liste_operation_possible,int nb_operation);
+
+graphe *lireFichier(const char *nomFichier);
+int *TriParDegreGraphe(graphe *g);
+bool estAdj(graphe *g,int s1,int s2);
+bool estAdjTab(graphe *g, int sommet, int couleur);
+void welshPowell(graphe *g ,operations_l **listeOP);
+
+
 
 // Ouverture du fichier operation pour lecture des valeurs et inclusions dans une liste operation_l 
 int lecture_fichier_operation(operations_l** liste_operation){
@@ -128,9 +152,9 @@ void precedence_init(int nombre_operation,operations_l** liste_operations){
     // Precedent est un couple de sommets avec l'un precedant l'autre Ici on cree une liste de tous les couple present dans le fichier
     precedent * liste_precedent = (precedent*) malloc(sizeof(precedent)* nb_arc);
     int actuelle = 0;
-    while(fscanf(fichier_prece,"%i %i\n",&liste_precedent[actuelle].op1,&liste_precedent[actuelle].op2)==2)
+    while(fscanf(fichier_prece,"%i %i\n",&liste_precedent[actuelle].op2,&liste_precedent[actuelle].op1)==2)
         actuelle++;
-
+    // OP2 precede OP1 soit op2 doit etre execute avant op1
 
     // Une fois que tous les couples ont été lus on les reparti dans chaque operation correspondantes
     // On cree un tableau contenant les precedence
@@ -219,14 +243,14 @@ int check_coloration(operations_l operation, station station_t){
 
 
 
-float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t){
+float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t, int temps_cycle){
     float valeur_final = 0;
     float plus_grand = 0;
     int index_plus_grand =-1;
     if(nb_operation_effectuable ==0)
         return 0;
     for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
-        if((*operation_effectuable)[operation_i]->temps > plus_grand && (*operation_effectuable)[operation_i]->temps + temps_actuel <= 10){
+        if((*operation_effectuable)[operation_i]->temps > plus_grand && (*operation_effectuable)[operation_i]->temps + temps_actuel <= temps_cycle && check_coloration(*((*operation_effectuable)[operation_i]),*station_t)){
             plus_grand = (*operation_effectuable)[operation_i]->temps;
             index_plus_grand = operation_i;
         }
@@ -244,7 +268,7 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
     (*operation_effectuable)[index_plus_grand]->effectuer = True;
     station_t->liste_operation[station_t->nb_operation_actuelle] = *((*operation_effectuable)[index_plus_grand]);
     station_t->nb_operation_actuelle++;
-    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,index,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps,station_t);
+    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,index,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps,station_t,temps_cycle);
 
     return valeur_final;
 }
@@ -252,7 +276,7 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
 
 
 
-void implementation_Pert(operations_l** liste_operation, int nombre_operation){
+void implementation_Pert(operations_l** liste_operation, int nombre_operation,int temps_cycle){
     int nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
     int nb_operation_possible = 0;
     int index_station = 0;
@@ -265,7 +289,7 @@ void implementation_Pert(operations_l** liste_operation, int nombre_operation){
         liste_station[index_station].nb_operation_actuelle = 0;
         liste_station[index_station].temps_total = 0;
         liste_station[index_station].liste_operation = malloc(sizeof(operations_l)*nb_operation_possible);
-        liste_station[index_station].temps_total = calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]));
+        liste_station[index_station].temps_total = calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]),temps_cycle);
         nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
         free(liste_operation_possible);
         index_station++;
@@ -323,10 +347,229 @@ int comptage_operation(operations_l** liste_operation,int nb_operation){    // C
     for(int operation_i = 0;operation_i<nb_operation;operation_i++){        // POUR CHAQUE OPERATION, ON REGARDE SI ELLE A DEJA ETE EXECUTE OU NON
         if((*liste_operation)[operation_i].effectuer==False)
             nb_operation_restante++;
-        //printf("Etat : %i",(*liste_operation)[operation_i].effectuer);
     }
 
     return nb_operation_restante;
 }
 
+
+
+
+
+graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fichier de contrainte d'exclusions
+    //suite à des problèmes d'allocations dynamique nous avons décidé de lire plusieurs fois le fichier
+    FILE *fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
+    }
+
+    int maxNom = 0;
+    int maxDegre = 0;
+    int sommet1, sommet2;
+
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//première lecture pour avoir le degré max
+        if (sommet1 > maxNom) {
+            maxNom = sommet1;
+        }
+        if (sommet2 > maxNom) {
+            maxNom = sommet2;
+        }
+        if (sommet1 > maxDegre) {
+            maxDegre = sommet1;
+        }
+        if (sommet2 > maxDegre) {
+            maxDegre = sommet2;
+        }
+    }
+    graphe *g = malloc(sizeof(graphe));
+    g->taille = maxDegre;
+
+    fclose(fichier);
+
+    fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
+    }
+
+    g->tabOperations = malloc((maxDegre + 1) * sizeof(int));
+    g->listeArc = malloc((maxNom + 1) * sizeof(sommetExclu));
+
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degré des sommets à 0
+        g->listeArc[sommet1].degre = 0;
+        g->listeArc[sommet2].degre = 0;
+    }
+    fclose(fichier);
+    fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int p = 0; p < g->taille+1; p++) {
+        g->listeArc[p].degre = 0;
+    }
+
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degrés
+        g->listeArc[sommet1].degre += 1;
+        g->listeArc[sommet2].degre += 1;
+    }
+
+    for (int i = 1; i <= maxNom; i++) {
+        g->listeArc[i].adjacents = malloc(g->listeArc[i].degre * sizeof(int));
+        g->listeArc[i].nom = i;
+    }
+
+    fclose(fichier);
+    fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("probleme fichier");
+        exit(EXIT_FAILURE);
+    }
+    int *index=calloc(g->taille+1,sizeof(int));
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//attribution des adjacences des sommets
+        g->listeArc[sommet1].adjacents[index[sommet1]] = sommet2;
+        g->listeArc[sommet2].adjacents[index[sommet2]] = sommet1;
+        //printf("%d:%d\n",g->listeArc[sommet1].adjacents[index[sommet1]],g->listeArc[sommet2].adjacents[index[sommet2]]);
+        index[sommet1] += 1;
+        index[sommet2] += 1;
+    }
+
+
+    fclose(fichier);
+    int degreMax = 0;
+    for (int i = 1; i < g->taille+1; i++) {
+        if (g->listeArc[i].degre > degreMax) {
+            degreMax = g->listeArc[i].degre;
+        }
+    }
+    g->degMax = degreMax;
+
+    return g;
+}
+
+int *TriParDegreGraphe(graphe *g) {
+    int finTri = g->degMax;
+    int *tabSommets = calloc((g->taille) * sizeof(int), 0);
+    for (int m = 0; m <= g->taille; m++) {
+        tabSommets[m] = 0;
+        g->listeArc[m].couleur=-1;
+    }
+
+    int j = 0;
+    while (finTri > -1) {
+        int i = 1;
+        while (i <= 35) {
+            if (g->listeArc[i].degre == finTri) {
+                tabSommets[j] = i;
+                j++;
+            }
+            i++;
+        }
+        finTri--;
+    }
+
+    return tabSommets;
+}
+
+bool estAdj(graphe *g, int s1, int s2) {
+    for (int i = 0; i < g->listeArc[s1].degre; i++) {
+        if (g->listeArc[s1].adjacents[i] == s2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool estAdjTab(graphe *g, int sommet, int couleur) {
+    for (int i = 0; i < g->listeArc[sommet].degre; i++) {
+        for (int j = 0; j < g->taille; j++) {
+            if (g->listeArc[g->listeArc[sommet].adjacents[i]].couleur == couleur) {
+                if(estAdj(g,sommet,j)){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+void welshPowell(graphe *g ,operations_l **listeOP) {//Algorithme de Welsch et Powell comme étudié en cours
+    printf("\nWELSCH POWELL\n");
+    int *tabSommets = TriParDegreGraphe(g);
+    printf(" ");
+    int *vus=tabSommets;
+
+    printf("debut algo\n");
+    int couleur=0;
+    for (int i = 0; i < g->taille; i++) {
+        if(vus[i]!=0){
+            g->listeArc[tabSommets[i]].couleur=couleur;
+            printf("Couleur :%d\n%d,",i,tabSommets[i]);
+            vus[i]=0;
+            for(int k=0;k<g->taille;k++){
+                if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,tabSommets[k],i)){
+                    g->listeArc[tabSommets[k]].couleur=couleur;
+                    for(int l=0;l<g->taille;l++){
+                        if(tabSommets[k]==(*listeOP)[l].operation){
+                            (*listeOP)[tabSommets[k]].couleur=couleur;}}
+                    printf("%d,",tabSommets[k]);
+                    vus[k]=0;
+
+                }
+            }
+            couleur++;
+        }
+        printf("\n");
+
+
+
+
+    }
+    printf("fin algo\n");
+    g->nbStations=couleur;
+    printf("nbStations: %d\n",g->nbStations);
+    free(tabSommets);//libération de la mémoire
+    free(vus);
+}
+
+bool ErreurAllocation(int **colo,graphe *g){
+    for(int i=0;i<g->taille;i++){
+        if(colo[i][0]>(g->taille+1)){
+            printf("erreur alloc\n");
+            return false;
+        }
+    }
+    printf("alloc faite\n");
+    return true;
+}
+
+
+
+bool verifAdjacenceListeCouleurs(graphe* g, int** colorations) {
+    for (size_t i = 0; i < g->taille; i++) {
+        if (colorations[i][0] != 0 && colorations[i][0] <= g->taille) {
+            for (int j = 0; j < g->taille; j++) {
+                if (colorations[i][j] != 0 && colorations[i][j] <= g->taille) {
+                    int sommet1 = colorations[i][j];
+                    for (int k = 0; k < g->listeArc[sommet1].degre; k++) {
+                        int adjacent = g->listeArc[sommet1].adjacents[k];
+                        for (int l = 0; l < g->taille; l++) {
+                            if (colorations[i][l] != 0 && colorations[i][l] <= g->taille) {
+                                int sommet2 = colorations[i][l];
+                                if (adjacent == sommet2) {
+
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 

@@ -4,26 +4,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "header.h"
 
-typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degre
+typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degré
     int nom;
     int *adjacents;
     int degre;
-} sommet;
+    int couleur;
+} sommetExclu;
 
-typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre decroissant des degres, tous les sommets, la taille et le degre maximum
+typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre décroissant des degrés, tous les sommets, la taille et le degré maximum
     int *tabOperations;
-    sommet *listeArc;
+    sommetExclu *listeArc;
     int taille;
     int degMax;
+    int nbStations;
 } graphe;
 
-typedef struct Colorations {//structure qui contient un tableau des couleurs dans lesquelles on a les sommets
-    int **Couleurs;
-} Colorations;
+
 
 graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fichier de contrainte d'exclusions
-    //suite à des problemes d'allocations dynamique nous avons decide de lire plusieurs fois le fichier
+    //suite à des problèmes d'allocations dynamique nous avons décidé de lire plusieurs fois le fichier
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
         printf("probleme fichier");
@@ -34,7 +35,7 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
     int maxDegre = 0;
     int sommet1, sommet2;
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//premiere lecture pour avoir le degre max
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//première lecture pour avoir le degré max
         if (sommet1 > maxNom) {
             maxNom = sommet1;
         }
@@ -60,9 +61,9 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
     }
 
     g->tabOperations = malloc((maxDegre + 1) * sizeof(int));
-    g->listeArc = malloc((maxNom + 1) * sizeof(sommet));
+    g->listeArc = malloc((maxNom + 1) * sizeof(sommetExclu));
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degre des sommets à 0
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degré des sommets à 0
         g->listeArc[sommet1].degre = 0;
         g->listeArc[sommet2].degre = 0;
     }
@@ -73,11 +74,11 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
         exit(EXIT_FAILURE);
     }
 
-    for (int p = 0; p < g->taille; p++) {
+    for (int p = 0; p < g->taille+1; p++) {
         g->listeArc[p].degre = 0;
     }
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degres
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degrés
         g->listeArc[sommet1].degre += 1;
         g->listeArc[sommet2].degre += 1;
     }
@@ -93,10 +94,11 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
         printf("probleme fichier");
         exit(EXIT_FAILURE);
     }
-    int *index=calloc(g->taille,sizeof(int));
+    int *index=calloc(g->taille+1,sizeof(int));
     while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//attribution des adjacences des sommets
         g->listeArc[sommet1].adjacents[index[sommet1]] = sommet2;
         g->listeArc[sommet2].adjacents[index[sommet2]] = sommet1;
+        //printf("%d:%d\n",g->listeArc[sommet1].adjacents[index[sommet1]],g->listeArc[sommet2].adjacents[index[sommet2]]);
         index[sommet1] += 1;
         index[sommet2] += 1;
     }
@@ -104,7 +106,7 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
 
     fclose(fichier);
     int degreMax = 0;
-    for (int i = 1; i < g->taille; i++) {
+    for (int i = 1; i < g->taille+1; i++) {
         if (g->listeArc[i].degre > degreMax) {
             degreMax = g->listeArc[i].degre;
         }
@@ -119,6 +121,7 @@ int *TriParDegreGraphe(graphe *g) {
     int *tabSommets = calloc((g->taille) * sizeof(int), 0);
     for (int m = 0; m <= g->taille; m++) {
         tabSommets[m] = 0;
+        g->listeArc[m].couleur=-1;
     }
 
     int j = 0;
@@ -146,40 +149,94 @@ bool estAdj(graphe *g, int s1, int s2) {
     return false;
 }
 
-bool estAdjTab(graphe *g, int *tab, int sommet, size_t index) {
+bool estAdjTab(graphe *g, int sommet, int couleur) {
     for (int i = 0; i < g->listeArc[sommet].degre; i++) {
-        for (size_t j = 0; j < index; j++) {
-            if (g->listeArc[sommet].adjacents[i] == tab[j]) {
-                return true;
+        for (int j = 0; j < g->taille; j++) {
+            if (g->listeArc[g->listeArc[sommet].adjacents[i]].couleur == couleur) {
+                if(estAdj(g,sommet,j)){
+                    return true;
+                }
             }
         }
     }
     return false;
 }
 
-void welshPowell(graphe *g, Colorations *colorations) {//Algorithme de Welsch et Powell comme etudie en cours
-    int *tabSommets = TriParDegreGraphe(g);
-    int *vus=tabSommets;
-    for (int i = 0; i < g->taille; i++) {
-        colorations->Couleurs[i] = malloc(g->taille*sizeof(int));
-        if(vus[i]!=0){
-            colorations->Couleurs[i][0] = tabSommets[i];
-            printf("\n");
-            vus[i]=0;
-            int index=1;
-            for(int k=0;k<g->taille;k++){
-                if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,colorations->Couleurs[i],tabSommets[k],index)){
-                    colorations->Couleurs[i][index]=tabSommets[k];
-                    printf(" ");
-                    vus[k]=0;
-                    index+=1;
-                }
 
+void welshPowell(graphe *g ,operations_l **listeOP) {//Algorithme de Welsch et Powell comme étudié en cours
+    printf("\nWELSCH POWELL\n");
+    int *tabSommets = TriParDegreGraphe(g);
+    printf(" ");
+    int *vus=tabSommets;
+
+    printf("debut algo\n");
+    int couleur=0;
+    for (int i = 0; i < g->taille; i++) {
+        if(vus[i]!=0){
+            g->listeArc[tabSommets[i]].couleur=couleur;
+            printf("Couleur :%d\n%d,",i,tabSommets[i]);
+            vus[i]=0;
+            for(int k=0;k<g->taille;k++){
+                if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,tabSommets[k],i)){
+                    g->listeArc[tabSommets[k]].couleur=couleur;
+                    for(int l=0;l<g->taille;l++){
+                        if(tabSommets[k]==(*listeOP)[l].operation){
+                            (*listeOP)[tabSommets[k]].couleur=couleur;}}
+                    printf("%d,",tabSommets[k]);
+                    vus[k]=0;
+
+                }
+            }
+            couleur++;
+        }
+
+
+
+
+    }
+    printf("fin algo\n");
+    g->nbStations=couleur;
+    printf("nbStations: %d\n",g->nbStations);
+    free(tabSommets);//libération de la mémoire
+    free(vus);
+}
+
+bool ErreurAllocation(int **colo,graphe *g){
+    for(int i=0;i<g->taille;i++){
+        if(colo[i][0]>(g->taille+1)){
+            printf("erreur alloc\n");
+            return false;
+        }
+    }
+    printf("alloc faite\n");
+    return true;
+}
+
+
+
+bool verifAdjacenceListeCouleurs(graphe* g, int** colorations) {
+    for (size_t i = 0; i < g->taille; i++) {
+        if (colorations[i][0] != 0 && colorations[i][0] <= g->taille) {
+            for (int j = 0; j < g->taille; j++) {
+                if (colorations[i][j] != 0 && colorations[i][j] <= g->taille) {
+                    int sommet1 = colorations[i][j];
+                    for (int k = 0; k < g->listeArc[sommet1].degre; k++) {
+                        int adjacent = g->listeArc[sommet1].adjacents[k];
+                        for (int l = 0; l < g->taille; l++) {
+                            if (colorations[i][l] != 0 && colorations[i][l] <= g->taille) {
+                                int sommet2 = colorations[i][l];
+                                if (adjacent == sommet2) {
+
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-    free(tabSommets);//liberation de la memoire
-    free(vus);
+    return false;
 }
 
 

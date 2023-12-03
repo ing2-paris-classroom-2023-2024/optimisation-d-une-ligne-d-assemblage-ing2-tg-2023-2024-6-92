@@ -2,20 +2,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "header_Mike.h"
-graphe *lireFichier(const char *nomFichier);
-int *TriParDegreGraphe(graphe *g);
-bool estAdj(graphe *g,int s1,int s2);
-bool estAdjTab(graphe *g, int *tab, int sommet, size_t index);
-void welshPowell(graphe *g, Colorations *colorations);
+
 
 
 int main() {
     graphe *g = lireFichier("exclusions.txt");
-    Colorations *colorations= malloc(sizeof(Colorations));
-    colorations->Couleurs=malloc(g->taille*sizeof(int*));
-    for(int b=0;b<g->taille;b++){
-        colorations->Couleurs[b]=malloc(sizeof(int)*g->taille);
-    }
+    
     welshPowell(g,colorations);
     printf("Tableau de Colorations :\n");
     int index=1;
