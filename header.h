@@ -12,6 +12,7 @@ typedef struct {
     int nb_operation_precedente;            // INDIQUE LE NOMBRE OPERATION PRECEDENTE NECCASSAIRE POUR EFFECTUER OPERATION
     int effectuer;                          // INDIQUE SI OPERATION A ETE EFFECTUER, ELLE EST DEJA DANS UNE STATION
     int effectuable;                        // INDIQUE SI OPERATION EST EFFECTUABLE, TOUTES LES OPERATIONS PRECEDENTES SONT DEJA EFFECTUER
+    int couleur;
 }operations_l;
 
 typedef struct
@@ -25,6 +26,15 @@ typedef struct
     int sommet;
     int nb;
 }tuple;
+
+typedef struct 
+{
+    int nb_operation_max;
+    int nb_operation_actuelle;
+    operations_l * liste_operation;
+    float temps_total;
+}station;
+
 
 
 
@@ -190,7 +200,7 @@ float calcul_chemin_rapide(operations_l*** operation_effectuable, int nb_operati
 // CETTE FONCTION EST OPERATIONELLE MAIS NECESSITE UNE GRANDE PUISSANCE DE CALCUL, CEPENDANT ELLE PEUT DONNER DES RESULTATS PLUS SATISFAISANT
 
 
-float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel){
+float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t){
     float valeur_final = 0;
     float plus_grand = 0;
     int index_plus_grand =-1;
@@ -213,7 +223,9 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
         }
     }
     (*operation_effectuable)[index_plus_grand]->effectuer = True;
-    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,index,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps);
+    station_t->liste_operation[station_t->nb_operation_actuelle] = *((*operation_effectuable)[index_plus_grand]);
+    station_t->nb_operation_actuelle++;
+    valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&nouvelles_liste,index,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps,station_t);
 
     return valeur_final;
 }
@@ -224,13 +236,20 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
 void implementation_Pert(operations_l** liste_operation, int nombre_operation){
     int nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
     int nb_operation_possible = 0;
+    int index_station = 0;
+    station *liste_station = malloc(sizeof(station)*nombre_operation);
     while(nb_operation_restante!=0){
-        nb_operation_possible = check_operation_possible(liste_operation,nombre_operation) ;
+        nb_operation_possible = check_operation_possible(liste_operation,nombre_operation);
         operations_l **liste_operation_possible = (operations_l**) malloc(sizeof(operations_l*)*nb_operation_possible);
-        associe_liste_operation_possible(liste_operation,&liste_operation_possible,nombre_operation);      
-        calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0);
+        associe_liste_operation_possible(liste_operation,&liste_operation_possible,nombre_operation);
+        liste_station[index_station].nb_operation_max = nb_operation_possible;
+        liste_station[index_station].nb_operation_actuelle = 0;
+        liste_station[index_station].temps_total = 0;
+        liste_station[index_station].liste_operation = malloc(sizeof(operations_l)*nb_operation_possible);
+        calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]));
         nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
         free(liste_operation_possible);
+        index_station++;
     }
 }
 
