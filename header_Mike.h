@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degré
+typedef struct sommet {//structure d'un sommet avec la liste des sommets adjacents et son degre
     int nom;
     int *adjacents;
     int degre;
 } sommet;
 
-typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre décroissant des degrés, tous les sommets, la taille et le degré maximum
+typedef struct graphe {//structure du graphe qui comprends la liste des sommets dans l'ordre decroissant des degres, tous les sommets, la taille et le degre maximum
     int *tabOperations;
     sommet *listeArc;
     int taille;
@@ -23,7 +23,7 @@ typedef struct Colorations {//structure qui contient un tableau des couleurs dan
 } Colorations;
 
 graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fichier de contrainte d'exclusions
-    //suite à des problèmes d'allocations dynamique nous avons décidé de lire plusieurs fois le fichier
+    //suite à des problemes d'allocations dynamique nous avons decide de lire plusieurs fois le fichier
     FILE *fichier = fopen(nomFichier, "r");
     if (fichier == NULL) {
         printf("probleme fichier");
@@ -34,7 +34,7 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
     int maxDegre = 0;
     int sommet1, sommet2;
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//première lecture pour avoir le degré max
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//premiere lecture pour avoir le degre max
         if (sommet1 > maxNom) {
             maxNom = sommet1;
         }
@@ -62,7 +62,7 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
     g->tabOperations = malloc((maxDegre + 1) * sizeof(int));
     g->listeArc = malloc((maxNom + 1) * sizeof(sommet));
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degré des sommets à 0
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour le degre des sommets à 0
         g->listeArc[sommet1].degre = 0;
         g->listeArc[sommet2].degre = 0;
     }
@@ -77,7 +77,7 @@ graphe *lireFichier(const char *nomFichier) {//Fonction qui permet de lire le fi
         g->listeArc[p].degre = 0;
     }
 
-    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degrés
+    while (fscanf(fichier, "%d %d", &sommet1, &sommet2) == 2) {//lecture pour compter les degres
         g->listeArc[sommet1].degre += 1;
         g->listeArc[sommet2].degre += 1;
     }
@@ -157,7 +157,7 @@ bool estAdjTab(graphe *g, int *tab, int sommet, size_t index) {
     return false;
 }
 
-void welshPowell(graphe *g, Colorations *colorations) {//Algorithme de Welsch et Powell comme étudié en cours
+void welshPowell(graphe *g, Colorations *colorations) {//Algorithme de Welsch et Powell comme etudie en cours
     int *tabSommets = TriParDegreGraphe(g);
     int *vus=tabSommets;
     for (int i = 0; i < g->taille; i++) {
@@ -178,7 +178,7 @@ void welshPowell(graphe *g, Colorations *colorations) {//Algorithme de Welsch et
             }
         }
     }
-    free(tabSommets);//libération de la mémoire
+    free(tabSommets);//liberation de la memoire
     free(vus);
 }
 

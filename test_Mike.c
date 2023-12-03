@@ -48,5 +48,5 @@ int main() {
     }
     free(g->listeArc);
 
-        return 0;
+    return 0;
 }

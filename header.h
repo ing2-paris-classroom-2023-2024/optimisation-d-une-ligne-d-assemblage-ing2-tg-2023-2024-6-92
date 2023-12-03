@@ -4,7 +4,7 @@
 #define True 1
 #define False 0
 
-
+// STRUCTURE CONTENANT TOUTES LES INFOS SUR UNE OPERATION
 typedef struct {
     int operation;                          // ID DE OPERATION
     float temps;                            // TEMPS NECESSAIRE POUR EFFECTUER OPERATION
@@ -12,8 +12,8 @@ typedef struct {
     int nb_operation_precedente;            // INDIQUE LE NOMBRE OPERATION PRECEDENTE NECCASSAIRE POUR EFFECTUER OPERATION
     int effectuer;                          // INDIQUE SI OPERATION A ETE EFFECTUER, ELLE EST DEJA DANS UNE STATION
     int effectuable;                        // INDIQUE SI OPERATION EST EFFECTUABLE, TOUTES LES OPERATIONS PRECEDENTES SONT DEJA EFFECTUER
-    int couleur;
-}operations_l;
+    int couleur;                            // INDIQUE LA COULEUR DE OPERATION GRACE A WESH POWELL
+}operations_l;                              
 
 typedef struct
 {
@@ -27,13 +27,14 @@ typedef struct
     int nb;
 }tuple;
 
+// STRUCTURE STATION QUI CONTIENT LES INFOS
 typedef struct 
 {
-    int nb_operation_max;
-    int nb_operation_actuelle;
-    operations_l * liste_operation;
-    float temps_total;
-}station;
+    int nb_operation_max;                   // OPERATIONS MAXIMUM CONTENU DANS CETTE STATION
+    int nb_operation_actuelle;              // OPERATION CONTENU A UN INSTANT T DANS CETTE STAION
+    operations_l * liste_operation;         // LISTE OPERATION CONTENU DANS CETTE STATION
+    float temps_total;                      // TEMPS DE PRIS PAR LA STATION (VS TEMPS DE CYCLE)
+}station;                                    
 
 
 
@@ -79,6 +80,7 @@ int lecture_fichier_operation(operations_l** liste_operation){
     return nombre_operation;
 }
 
+// Ouverture du fichier temps de cycle et lecture de celui-ci
 float lecture_temps_cycle(void){
     FILE* fichier_temps;
     fichier_temps = fopen("temps_cycle.txt","r");
@@ -94,6 +96,7 @@ float lecture_temps_cycle(void){
     return temps_cycle;  
 }
 
+// Fonction comptant le nombre de ligne dans un fichier
 int nb_ligne_fichier(char* nom_fcihier){
     FILE* fichier;
     fichier = fopen(nom_fcihier,"r");
@@ -104,14 +107,17 @@ int nb_ligne_fichier(char* nom_fcihier){
         if(c=='\n')
             nombre++;
     }
+
     nombre++;
     fclose(fichier);
-
     return nombre;
-
 }
 
+
+// Ouvre et lis les informations contenu dans le fichier de precedence
 void precedence_init(int nombre_operation,operations_l** liste_operations){
+
+    // Initialisation du fichier
     int nb_arc= nb_ligne_fichier("precedences.txt");
     FILE *fichier_prece;
     fichier_prece = fopen("precedences.txt","r");
@@ -119,12 +125,15 @@ void precedence_init(int nombre_operation,operations_l** liste_operations){
         printf("Erreur lors de l'ouverture du fichier des precedences.");
         return;
     }
-
+    // Precedent est un couple de sommets avec l'un precedant l'autre Ici on cree une liste de tous les couple present dans le fichier
     precedent * liste_precedent = (precedent*) malloc(sizeof(precedent)* nb_arc);
     int actuelle = 0;
-    while(fscanf(fichier_prece,"%i %i\n",&liste_precedent[actuelle].op2,&liste_precedent[actuelle].op1)==2)
+    while(fscanf(fichier_prece,"%i %i\n",&liste_precedent[actuelle].op1,&liste_precedent[actuelle].op2)==2)
         actuelle++;
 
+
+    // Une fois que tous les couples ont été lus on les reparti dans chaque operation correspondantes
+    // On cree un tableau contenant les precedence
     int **liste_operation_precedente = (int**) malloc(sizeof(int*)*nombre_operation); 
     for(int i = 0;i<nombre_operation;i++){
         liste_operation_precedente[i] = (int*) malloc(sizeof(int)*nombre_operation);
@@ -200,6 +209,16 @@ float calcul_chemin_rapide(operations_l*** operation_effectuable, int nb_operati
 // CETTE FONCTION EST OPERATIONELLE MAIS NECESSITE UNE GRANDE PUISSANCE DE CALCUL, CEPENDANT ELLE PEUT DONNER DES RESULTATS PLUS SATISFAISANT
 
 
+int check_coloration(operations_l operation, station station_t){
+    for(int operation_i = 0; operation_i<station_t.nb_operation_actuelle;operation_i++){
+        if(operation.couleur==station_t.liste_operation[operation_i].couleur)
+            return False;
+    }
+    return True;
+}
+
+
+
 float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t){
     float valeur_final = 0;
     float plus_grand = 0;
@@ -246,10 +265,17 @@ void implementation_Pert(operations_l** liste_operation, int nombre_operation){
         liste_station[index_station].nb_operation_actuelle = 0;
         liste_station[index_station].temps_total = 0;
         liste_station[index_station].liste_operation = malloc(sizeof(operations_l)*nb_operation_possible);
-        calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]));
+        liste_station[index_station].temps_total = calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]));
         nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
         free(liste_operation_possible);
         index_station++;
+    }
+    for(int i = 0;i<index_station;i++){
+        printf("Les operations pour la station %i pour un temps total de %0.2f sont :",i+1,liste_station[i].temps_total);
+        for(int j = 0; j<liste_station[i].nb_operation_actuelle;j++){
+            printf(" %i ;",liste_station[i].liste_operation[j]);
+        }
+        printf("\n");
     }
 }
 
@@ -304,13 +330,3 @@ int comptage_operation(operations_l** liste_operation,int nb_operation){    // C
 }
 
 
-/*
-void nouvelle_liste_tache(operations_l**** operation_effectuable,int nb_operation_effectuable){
-    operations_l *** nouvelle_liste = (operations_l***) malloc(sizeof(operations_l*)*(nb_operation_effectuable-1));
-    for(int i = 1;i<nb_operation_effectuable;i++){
-        (*nouvelle_liste)[i] = (**operation_effectuable)[i]; 
-    }
-    free(operation_effectuable);
-    operation_effectuable = (&nouvelle_liste);
-}
-*/
