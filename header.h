@@ -497,17 +497,13 @@ bool estAdjTab(graphe *g, int sommet, int couleur) {
 
 
 void welshPowell(graphe *g ,operations_l **listeOP) {//Algorithme de Welsch et Powell comme étudié en cours
-    printf("\nWELSCH POWELL\n");
     int *tabSommets = TriParDegreGraphe(g);
-    printf(" ");
     int *vus=tabSommets;
 
-    printf("debut algo\n");
     int couleur=0;
     for (int i = 0; i < g->taille; i++) {
         if(vus[i]!=0){
             g->listeArc[tabSommets[i]].couleur=couleur;
-            printf("Couleur :%d\n%d,",i,tabSommets[i]);
             vus[i]=0;
             for(int k=0;k<g->taille;k++){
                 if(vus[k]!=0&& !estAdj(g,tabSommets[i],vus[k])&& !estAdjTab(g,tabSommets[k],i)){
@@ -515,22 +511,15 @@ void welshPowell(graphe *g ,operations_l **listeOP) {//Algorithme de Welsch et P
                     for(int l=0;l<g->taille;l++){
                         if(tabSommets[k]==(*listeOP)[l].operation){
                             (*listeOP)[tabSommets[k]].couleur=couleur;}}
-                    printf("%d,",tabSommets[k]);
                     vus[k]=0;
 
                 }
             }
             couleur++;
         }
-        printf("\n");
-
-
-
-
     }
-    printf("fin algo\n");
+
     g->nbStations=couleur;
-    printf("nbStations: %d\n",g->nbStations);
     free(tabSommets);//libération de la mémoire
     free(vus);
 }
@@ -542,7 +531,6 @@ bool ErreurAllocation(int **colo,graphe *g){
             return false;
         }
     }
-    printf("alloc faite\n");
     return true;
 }
 
