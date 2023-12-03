@@ -235,7 +235,7 @@ float calcul_chemin_rapide(operations_l*** operation_effectuable, int nb_operati
 
 int check_coloration(operations_l operation, station station_t){
     for(int operation_i = 0; operation_i<station_t.nb_operation_actuelle;operation_i++){
-        if(operation.couleur==station_t.liste_operation[operation_i].couleur)
+        if(operation.couleur!=station_t.liste_operation[operation_i].couleur)
             return False;
     }
     return True;
@@ -250,6 +250,7 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
     if(nb_operation_effectuable ==0)
         return 0;
     for(int operation_i = 0; operation_i<nb_operation_effectuable;operation_i++){
+        //printf("Coloration return : %i\n \n",check_coloration(*((*operation_effectuable)[operation_i]),*station_t));
         if((*operation_effectuable)[operation_i]->temps > plus_grand && (*operation_effectuable)[operation_i]->temps + temps_actuel <= temps_cycle && check_coloration(*((*operation_effectuable)[operation_i]),*station_t)){
             plus_grand = (*operation_effectuable)[operation_i]->temps;
             index_plus_grand = operation_i;
@@ -263,6 +264,7 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
     station_t->nb_operation_actuelle++;
     int nb_operation_possible = check_operation_possible(liste_operations,nombre_operation);
     operations_l **liste_operation_possible = (operations_l**) malloc(sizeof(operations_l*)*nb_operation_possible);
+    
     associe_liste_operation_possible(liste_operations,&liste_operation_possible,nombre_operation);
     valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps,station_t,temps_cycle,liste_operations,nombre_operation);
 
@@ -293,7 +295,7 @@ void implementation_Pert(operations_l* liste_operation, int nombre_operation,int
     for(int i = 0;i<index_station;i++){
         printf("Les operations pour la station %i pour un temps total de %0.2f sont :",i+1,liste_station[i].temps_total);
         for(int j = 0; j<liste_station[i].nb_operation_actuelle;j++){
-            printf(" %i ;",liste_station[i].liste_operation[j]);
+            printf(" %i ;",liste_station[i].liste_operation[j].operation);
         }
         printf("\n");
     }
@@ -305,7 +307,6 @@ void associe_liste_operation_possible(operations_l** liste_operation,operations_
         if((*liste_operation)[operation_i].effectuable == True && (*liste_operation)[operation_i].effectuer == False){
             (*liste_operation_possible)[index] = &((*liste_operation)[operation_i]);
             index++;
-            
         }
     }
 }
@@ -516,8 +517,8 @@ void welshPowell(graphe *g ,operations_l **listeOP) {//Algorithme de Welsch et P
     }
 
     g->nbStations=couleur;
-    free(tabSommets);//libération de la mémoire
-    free(vus);
+    //free(tabSommets);//libération de la mémoire
+    //free(vus);
 }
 
 bool ErreurAllocation(int **colo,graphe *g){
