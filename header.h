@@ -62,7 +62,7 @@ void precedence_init(int nombre_operation,operations_l** liste_operations);
 
 int check_operation_possible(operations_l ** liste_operation,int nb_operation);
 int comptage_operation(operations_l** liste_operation,int nb_operation);
-void implementation_Pert(operations_l** liste_operation, int nombre_operation, int temps_cycle);
+void implementation_Pert(operations_l* liste_operation, int nombre_operation, int temps_cycle);
 void associe_liste_operation_possible(operations_l** liste_operation,operations_l *** liste_operation_possible,int nb_operation);
 
 graphe *lireFichier(const char *nomFichier);
@@ -243,7 +243,7 @@ int check_coloration(operations_l operation, station station_t){
 
 
 
-float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t, int temps_cycle, operations_l ***liste_operations,int nombre_operation){
+float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int nb_operation_effectuable,float temps_actuel, station *station_t, int temps_cycle, operations_l **liste_operations,int nombre_operation){
     float valeur_final = 0;
     float plus_grand = 0;
     int index_plus_grand =-1;
@@ -261,9 +261,9 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
     (*operation_effectuable)[index_plus_grand]->effectuer = True;
     station_t->liste_operation[station_t->nb_operation_actuelle] = *((*operation_effectuable)[index_plus_grand]);
     station_t->nb_operation_actuelle++;
-    int nb_operation_possible = check_operation_possible((*liste_operations),nombre_operation);
+    int nb_operation_possible = check_operation_possible(liste_operations,nombre_operation);
     operations_l **liste_operation_possible = (operations_l**) malloc(sizeof(operations_l*)*nb_operation_possible);
-    associe_liste_operation_possible((*liste_operations),&liste_operation_possible,nombre_operation);
+    associe_liste_operation_possible(liste_operations,&liste_operation_possible,nombre_operation);
     valeur_final = (*operation_effectuable)[index_plus_grand]->temps + calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,temps_actuel+(*operation_effectuable)[index_plus_grand]->temps,station_t,temps_cycle,liste_operations,nombre_operation);
 
     return valeur_final;
@@ -272,21 +272,21 @@ float calcul_chemin_possible_rapide(operations_l*** operation_effectuable, int n
 
 
 
-void implementation_Pert(operations_l** liste_operation, int nombre_operation,int temps_cycle){
-    int nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
+void implementation_Pert(operations_l* liste_operation, int nombre_operation,int temps_cycle){
+    int nb_operation_restante = comptage_operation(&liste_operation,nombre_operation);
     int nb_operation_possible = 0;
     int index_station = 0;
     station *liste_station = malloc(sizeof(station)*nombre_operation);
     while(nb_operation_restante!=0){
-        nb_operation_possible = check_operation_possible(liste_operation,nombre_operation);
+        nb_operation_possible = check_operation_possible(&liste_operation,nombre_operation);
         operations_l **liste_operation_possible = (operations_l**) malloc(sizeof(operations_l*)*nb_operation_possible);
-        associe_liste_operation_possible(liste_operation,&liste_operation_possible,nombre_operation);
+        associe_liste_operation_possible(&liste_operation,&liste_operation_possible,nombre_operation);
         liste_station[index_station].nb_operation_max = nb_operation_possible;
         liste_station[index_station].nb_operation_actuelle = 0;
         liste_station[index_station].temps_total = 0;
         liste_station[index_station].liste_operation = malloc(sizeof(operations_l)*nombre_operation);
         liste_station[index_station].temps_total = calcul_chemin_possible_rapide(&liste_operation_possible,nb_operation_possible,0,&(liste_station[index_station]),temps_cycle,&liste_operation,nombre_operation);
-        nb_operation_restante = comptage_operation(liste_operation,nombre_operation);
+        nb_operation_restante = comptage_operation(&liste_operation,nombre_operation);
         free(liste_operation_possible);
         index_station++;
     }

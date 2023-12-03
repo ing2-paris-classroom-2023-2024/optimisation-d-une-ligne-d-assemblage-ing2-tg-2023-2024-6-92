@@ -13,7 +13,7 @@ int main(void){
     welshPowell(g,&liste_operation);
     
     precedence_init(nb_operation,&liste_operation);
-    implementation_Pert(&liste_operation,nb_operation,temps_cycle);
+    implementation_Pert(liste_operation,nb_operation,temps_cycle);
     affichageStations(g);
     
     return 0;
